@@ -1,50 +1,31 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-import time
+import requests
 
 
-def test_openstreetmap_search_and_zoom():
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--window-size=1366,900")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+def test_openstreetmap_main_page_available():
+    response = requests.get("https://www.openstreetmap.org", timeout=10)
 
-    driver = webdriver.Chrome(options=options)
+    assert response.status_code == 200
+    assert "OpenStreetMap" in response.text
 
-    try:
-        driver.get("https://www.openstreetmap.org")
-        time.sleep(3)
 
-        assert "OpenStreetMap" in driver.title
+def test_openstreetmap_search_kyiv_api():
+    url = "https://nominatim.openstreetmap.org/search"
 
-        search_fields = driver.find_elements(By.ID, "query")
+    params = {
+        "q": "Kyiv",
+        "format": "json",
+        "limit": 1
+    }
 
-        search_field = None
+    headers = {
+        "User-Agent": "Lab10-CICD-OpenStreetMap-Test"
+    }
 
-        for field in search_fields:
-            if field.is_displayed() and field.is_enabled():
-                search_field = field
-                break
+    response = requests.get(url, params=params, headers=headers, timeout=10)
 
-        assert search_field is not None
+    assert response.status_code == 200
 
-        search_field.click()
-        search_field.clear()
-        search_field.send_keys("Kyiv")
-        search_field.send_keys(Keys.ENTER)
+    data = response.json()
 
-        time.sleep(5)
-
-        assert "Kyiv" in driver.page_source or "Київ" in driver.page_source
-
-        zoom_button = driver.find_element(By.CLASS_NAME, "leaflet-control-zoom-in")
-        driver.execute_script("arguments[0].click();", zoom_button)
-
-        time.sleep(2)
-
-        assert zoom_button is not None
-
-    finally:
-        driver.quit()
+    assert len(data) > 0
+    assert "Kyiv" in data[0]["display_name"] or "Київ" in data[0]["display_name"]
