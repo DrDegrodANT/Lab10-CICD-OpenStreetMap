@@ -1,4 +1,4 @@
-name: OpenStreetMap Selenium Tests
+name: OpenStreetMap CI Tests
 
 on:
   push:
@@ -15,10 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show files
-        run: |
-          ls -la
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -27,8 +23,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install selenium pytest
+          pip install -r requirements.txt
 
-      - name: Run Selenium tests
+      - name: Run automated tests
         run: |
           pytest -v main.py
